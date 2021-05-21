@@ -23,7 +23,7 @@ matplotlib.use('qt5agg')
 # List of dirs
 # index        0       1       2      3       4       5      6      7     8       9
 mouse_list= ['PV92','PV94','PV100','PV104','PV107','WT58','WT96','WT97','WT98','WT101']
-mouse_name = mouse_list[1]  # CHANGE THIS
+mouse_name = mouse_list[4]  # CHANGE THIS
 day = '2'                   # AND THIS
 general_dir = r'C:\Users\ricca\Documents\Iurilli Lab\Experiments\Optoinhibition\optoinhibition\exp\pavlovian'
 mouse_dir = general_dir + '\\' + mouse_name
@@ -39,7 +39,8 @@ trial_types = data[int(day)]['SessionData']['TrialTypes']
 # a list with every trial
 trials_data = data[int(day)]['SessionData']['RawEvents']['Trial']
 nTrials= len(trial_types)
-
+nTrialOdor= len(np.where(trial_types==2)[0])
+nTrialNoOdor= len(np.where(trial_types==1)[0])
 
 # Compute how many trials with aLicks
 alicksOdor= np.zeros(nTrials)
@@ -55,8 +56,8 @@ for trial in range(0,nTrials):
         elif trial_types[trial]== 2:                
             if np.any(licks>infBound) and np.any(licks<supBound):
                 alicksOdor[trial]= 1
-percent_alicksOdor= round(np.sum(alicksOdor)/(nTrials/2)*100, 2)
-percent_alicksNoOdor= round(np.sum(alicksNoOdor)/(nTrials/2)*100,2)
+percent_alicksOdor= round(np.sum(alicksOdor)/(nTrialOdor)*100, 2)
+percent_alicksNoOdor= round(np.sum(alicksNoOdor)/(nTrialNoOdor)*100,2)
 
 
 

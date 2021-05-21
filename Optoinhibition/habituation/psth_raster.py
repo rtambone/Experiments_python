@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu May  6 18:51:22 2021
+Created on Mon May 17 12:12:32 2021
 
 @author: ricca
 """
@@ -17,6 +17,8 @@ import numpy as np
 import matplotlib 
 matplotlib.use('qt5agg')
 import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
+
 
 # Define psth function
 def get_psth(data, sig, time_windows, adaptive_warp=False): 
@@ -90,7 +92,7 @@ def get_psth(data, sig, time_windows, adaptive_warp=False):
 # List of dirs
 # index        0       1       2      3       4       5      6      7     8       9
 mouse_list= ['PV92','PV94','PV100','PV104','PV107','WT58','WT96','WT97','WT98','WT101']
-mouse_name = mouse_list[6]  # CHANGE THIS
+mouse_name = mouse_list[2]  # CHANGE THIS
 day= '-1'                   # AND THIS
 general_dir= r'C:\Users\ricca\Documents\Iurilli Lab\Experiments\Optoinhibition\optoinhibition\habituation'
 mouse_dir= general_dir + '\\'+ mouse_name 
@@ -104,15 +106,45 @@ for file in glob.glob('*.mat'):
 
 trial_types= data[int(day)]['SessionData']['TrialTypes']
 trials_data= data[int(day)]['SessionData']['RawEvents']['Trial']  # a list with every trial
+nTrials= len(trial_types)
 
+# Preprocessing for rasters
+csMinus = []
+csPlus = []
+csPlus_idx = np.array(np.where(trial_types == 2))
+csPlus_idx = csPlus_idx.reshape(csPlus_idx.shape[1])
+csMinus_idx = np.array(np.where(trial_types == 1))
+csMinus_idx = csMinus_idx.reshape(csMinus_idx.shape[1])
+for TrialType in range(1, 4):
+    licksXtrial = []
+    idxTrialType = np.array(np.where(trial_types == TrialType))
+    for Trial in range(0, idxTrialType.size):
+        # if there was a PortIn
+        if 'Port1In' in trials_data[idxTrialType[0][Trial]]['Events']:
+            # centered on valve opening
+            licks_ts = np.array(
+                trials_data[idxTrialType[0][Trial]]['Events']['Port1In'])
+            if licks_ts.shape == ():
+                licks_ts = licks_ts.reshape(1)
+            if TrialType == 1:    # valve click no odor
+                #licks_ts= licks_ts -
+                csMinus.append(licks_ts)
+            elif TrialType == 2:  # reward
+                csPlus.append(licks_ts)
 
 
 # Plot
 colors= [31,120,180],[106,61,154],[227,26,28],[251,127,0],[82,82,82]
 colors= np.divide(colors, 251)
 
-fig, ax= plt.subplots(nrows=1, ncols=1,constrained_layout=True)
-fig.suptitle(mouse_name)
+fig= plt.figure(constrained_layout=True)
+#fig.suptitle(mouse_name)
+gs= fig.add_gridspec(2,2)
+ax1= fig.add_subplot(gs[0,:])
+ax2= fig.add_subplot(gs[1,0])
+ax3= fig.add_subplot(gs[1,1])
+
+# Psth
 for TrialType in range(1,4):
     licksXtrial=[]
     idxTrialType= np.array(np.where(trial_types== TrialType))
@@ -122,12 +154,32 @@ for TrialType in range(1,4):
             licksXtrial.append(licks_ts)
     [R,t]= get_psth(licksXtrial, sig=0.1, time_windows= [-1, 15])
     if TrialType==1: 
-        ax.plot(t, R, color= colors[0], linewidth=2, label='Air Click')
+        ax1.plot(t, R, color= colors[0], linewidth=2, label='Air Click')
     elif TrialType==2:
-        ax.plot(t, R, color= colors[1], linewidth=2, label='Water Reward')
-    ax.legend()
-    #ax.set_title('Day '+ day)
-    ax.set_title('Recall session')
-    ax.axvline(color='black', x=2)
-    ax.set_xlabel('Time (s)')
-    ax.set_ylabel('Hz')
+        ax1.plot(t, R, color= colors[1], linewidth=2, label='Water Reward')
+    ax1.legend()
+    ax1.set_title(mouse_name + '  Recall session')
+    ax1.axvline(color='black', x=2)
+    ax1.set_xlabel('Time (s)')
+    ax1.set_ylabel('Hz')
+
+# Raster
+ax2.eventplot(csMinus, colors='black')  # lineoffsets= csMinus_idx)
+ax3.eventplot(csPlus, colors='black')
+ax2.set_title('No odor')
+ax3.set_title('Reward')
+
+ax2.set_ylim([0,nTrials/2])
+ax2.axvline(color='blue', x=2)
+ax2.set_xlabel('Time (s)')
+ax2.set_ylabel('Trials')
+ax2.add_patch(Rectangle((2,0), 
+              width= 2, height= abs(ax2.get_ylim()[1]),
+              alpha=0.5))
+ax3.set_ylim([0,nTrials/2])
+ax3.axvline(color='blue', x=2)
+ax3.set_xlabel('Time (s)')
+ax3.set_ylabel('Trials')
+ax3.add_patch(Rectangle((2,0), 
+              width= 2, height= abs(ax3.get_ylim()[1]),
+              alpha=0.5))

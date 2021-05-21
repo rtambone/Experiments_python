@@ -91,7 +91,7 @@ def get_psth(data, sig, time_windows, adaptive_warp=False):
 # List of dirs
 # index        0       1       2      3       4       5      6      7     8       9
 mouse_list= ['PV92','PV94','PV100','PV104','PV107','WT58','WT96','WT97','WT98','WT101']
-mouse_name = mouse_list[1]  # CHANGE THIS
+mouse_name = mouse_list[4]  # CHANGE THIS
 day= '2'                    # AND THIS
 general_dir = r'C:\Users\ricca\Documents\Iurilli Lab\Experiments\Optoinhibition\optoinhibition\exp\pavlovian'
 mouse_dir= general_dir + '\\'+ mouse_name
